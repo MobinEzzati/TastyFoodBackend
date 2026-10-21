@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import OrderTracking from "/Users/mobinezzati/Desktop/fall2025/webAppDevelopment/xyz_restaurant/src/Component/OrderTracking.jsx";
+import OrderTracking from "../Component/OrderTracking.jsx";
 import axios from "axios";
 
 // ✅ Import logos

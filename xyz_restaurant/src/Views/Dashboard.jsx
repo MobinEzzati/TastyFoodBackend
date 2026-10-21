@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { data, useNavigate } from "react-router-dom";
-import logo from "/Users/mobinezzati/Desktop/fall2025/webAppDevelopment/xyz_restaurant/src/img/Logo.png" ; 
+import logo from "../img/Logo.png";
 import { useEffect } from "react";
 
 import { toast } from "react-toastify";

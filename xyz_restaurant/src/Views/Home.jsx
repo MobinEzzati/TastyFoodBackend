@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import Header from './Header'
-import foodData from "./foodData";
+import Header from '../Component/Header'
+import foodData from "../data/foodData";
 
 const Home = () => {
   const [meals] = useState(foodData)
