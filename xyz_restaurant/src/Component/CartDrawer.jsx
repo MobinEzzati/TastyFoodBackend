@@ -14,83 +14,76 @@ function CartDrawer({ isOpen, onClose, cartItems, onRemoveItem, onPlaceOrder }) 
   };
 
   const handlePlaceOrder = () => {
-    // ✅ Trigger the order placement callback without unique number logic
     onPlaceOrder();
   };
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.drawer} onClick={(e) => e.stopPropagation()}>
-        <h2>Your Cart</h2>
+    <div className="drawer-overlay" onClick={onClose}>
+      <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
+        <h2 style={{ fontSize: "19px", marginBottom: "4px" }}>Your Cart</h2>
 
         {cartItems.length === 0 ? (
-          <p>No items in cart</p>
+          <p style={{ color: "var(--muted)", marginTop: "40px", textAlign: "center" }}>Your cart is empty</p>
         ) : (
           <>
-            <ul style={styles.list}>
+            <div style={{ margin: "14px 0", flex: 1 }}>
               {cartItems.map((item, i) => (
-                <li key={i} style={styles.listItem}>
-                  <span>
-                    {item.name} (x{item.qty})
+                <div key={i} className="cart-item">
+                  <span className="cart-item__name">
+                    {item.name} <span style={{ color: "var(--muted)", fontWeight: 500 }}>×{item.qty}</span>
                   </span>
-                  <div style={styles.itemRight}>
-                    <span>${(item.price * item.qty).toFixed(2)}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontWeight: 700 }}>${(item.price * item.qty).toFixed(2)}</span>
                     <button
                       onClick={() => onRemoveItem(item.name)}
-                      style={styles.trashBtn}
+                      className="btn-ghost"
+                      style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: "15px", padding: "4px" }}
                     >
                       🗑️
                     </button>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
 
-            {/* ✅ Subtotal */}
-            <div style={styles.row}>
+            <div className="cart-row">
               <span>Subtotal</span>
               <span>${subtotal.toFixed(2)}</span>
             </div>
 
-            {/* ✅ Service Charge */}
-            <div style={styles.row}>
+            <div className="cart-row">
               <span>Service Charge (8%)</span>
               <span>${serviceCharge.toFixed(2)}</span>
             </div>
 
-            {/* ✅ Tip Section */}
-            <div style={{ marginTop: "12px" }}>
-              <strong>How much do you want to tip?</strong>
-              <div style={styles.tipButtons}>
-                <button onClick={() => handleTipPercent(5)}>5%</button>
-                <button onClick={() => handleTipPercent(10)}>10%</button>
-                <button onClick={() => handleTipPercent(15)}>15%</button>
+            <div style={{ marginTop: "16px" }}>
+              <strong style={{ fontSize: "13.5px" }}>Add a tip</strong>
+              <div className="tip-row">
+                <button className="pill" style={{ flex: 1, padding: "8px" }} onClick={() => handleTipPercent(5)}>5%</button>
+                <button className="pill" style={{ flex: 1, padding: "8px" }} onClick={() => handleTipPercent(10)}>10%</button>
+                <button className="pill" style={{ flex: 1, padding: "8px" }} onClick={() => handleTipPercent(15)}>15%</button>
               </div>
               <input
                 type="number"
-                placeholder="Custom tip"
+                placeholder="Custom tip amount"
                 value={tip}
                 onChange={(e) => setTip(Number(e.target.value))}
-                style={styles.tipInput}
+                className="input"
+                style={{ marginTop: "10px" }}
               />
             </div>
 
-            {/* ✅ Total */}
-            <div style={styles.totalRow}>
+            <div className="cart-total">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
             </div>
           </>
         )}
 
-        {/* Footer */}
-        <div style={styles.footer}>
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "16px", marginTop: "16px" }}>
           <button
-            style={{
-              ...styles.placeOrder,
-              backgroundColor: cartItems.length === 0 ? "#ccc" : "#ff5722",
-              cursor: cartItems.length === 0 ? "not-allowed" : "pointer",
-            }}
+            className="btn btn-primary"
+            style={{ width: "100%", padding: "13px" }}
             disabled={cartItems.length === 0}
             onClick={handlePlaceOrder}
           >
@@ -101,93 +94,5 @@ function CartDrawer({ isOpen, onClose, cartItems, onRemoveItem, onPlaceOrder }) 
     </div>
   );
 }
-
-const styles = {
-  overlay: {
-    position: "fixed",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "flex-end",
-  },
-  drawer: {
-    background: "#fff",
-    width: "340px",
-    height: "100%",
-    padding: "20px",
-    boxShadow: "-2px 0 8px rgba(0,0,0,0.2)",
-    display: "flex",
-    flexDirection: "column",
-  },
-  list: {
-    listStyle: "none",
-    padding: 0,
-    margin: "15px 0",
-  },
-  listItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "10px",
-    paddingBottom: "10px",
-    borderBottom: "1px solid #ddd",
-  },
-  itemRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  },
-  trashBtn: {
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    fontSize: "16px",
-  },
-  row: {
-    display: "flex",
-    justifyContent: "space-between",
-    paddingTop: "6px",
-    fontSize: "14px",
-  },
-  totalRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    paddingTop: "12px",
-    borderTop: "2px solid #000",
-    fontWeight: "bold",
-    fontSize: "16px",
-    marginTop: "12px",
-  },
-  tipButtons: {
-    display: "flex",
-    gap: "8px",
-    marginTop: "6px",
-  },
-  tipInput: {
-    marginTop: "8px",
-    width: "100%",
-    padding: "6px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-  },
-  footer: {
-    borderTop: "1px solid #ddd",
-    paddingTop: "10px",
-    marginTop: "10px",
-  },
-  placeOrder: {
-    padding: "10px",
-    backgroundColor: "#ff5722",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-    width: "100%",
-  },
-};
 
 export default CartDrawer;

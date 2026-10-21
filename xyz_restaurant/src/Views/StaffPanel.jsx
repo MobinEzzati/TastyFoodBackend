@@ -26,7 +26,7 @@ const fmtDateTime = (d) =>
 export default function StaffPanel() {
   const navigate = useNavigate();
 
-  
+
 
   const [filter, setFilter] = useState(STATUSES.PENDING);
   const [orders, setOrders] = useState([]);
@@ -41,8 +41,7 @@ export default function StaffPanel() {
     return orders.filter((o) => o.orderStatus === filter);
   }, [orders, filter]);
 
-  const totalQty = (items) => items.reduce((s, i) => s + i.qty, 0);
-  
+
 
   useEffect(() => {
     // 1️⃣ Load orders from backend
@@ -54,23 +53,23 @@ export default function StaffPanel() {
           customerName: o.customerName,
           orderDateTime: o.orderDateTime,
           eta: o.eta,
-  
+
           // address object from backend
           deliveryAddress: o.deliveryAddress,
-  
+
           // 2️⃣ Fix: properly convert orderItems to readable format
           items: (o.orderItems || []).map(item => ({
             name: item.menuItem.name,
             qty: item.quantity,
             subtotal: item.subtotal
           })),
-  
+
           total: o.grandTotal,
           driver: o.driver,
           orderStatus: o.orderStatus,
           deliveredAt: o.deliveredAt
         }));
-  
+
         setOrders(mapped);
       })
       .catch(err => console.error("Failed to load orders", err));
@@ -82,19 +81,19 @@ export default function StaffPanel() {
         setDrivers(activeDrivers);
       })
       .catch(err => console.error("Failed to load drivers", err));
-  
+
     // 2️⃣ Load staff username from localStorage
     const username = localStorage.getItem("staffUsername");
     if (username) setStaffName(username);
-  
+
   }, []);
 
-   
+
 
   useEffect(() => {
     console.log("Drivers updated:", drivers);
   }, [drivers]);
-  
+
 
   const assignDriver = (orderId, driverId) => {
     fetch(`http://localhost:8080/api/orders/${orderId}/assignDriver?driverId=${driverId}`, {
@@ -103,7 +102,7 @@ export default function StaffPanel() {
       .then(res => res.text())
       .then(() => {
         const assigned = drivers.find(d => d.driverId === Number(driverId));
-  
+
         setOrders(prev =>
           prev.map(o =>
             o.id === orderId
@@ -118,7 +117,7 @@ export default function StaffPanel() {
       })
       .catch(err => console.error("Driver assign error:", err));
   };
-  
+
 
   const markDelivered = (orderId) => {
     fetch(`http://localhost:8080/api/orders/${orderId}/deliver`, {
@@ -157,40 +156,38 @@ export default function StaffPanel() {
     navigate("/change-password");
   };
 
+  const tabs = [
+    { key: STATUSES.PENDING, label: "Incoming Orders" },
+    { key: STATUSES.ASSIGNED, label: "Assigned Driver" },
+    { key: STATUSES.DELIVERED, label: "Delivered" },
+    { key: "All", label: "All" },
+  ];
+
   return (
-    <div style={styles.page}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       {/* Header */}
-      <header style={styles.header}>
+      <header className="staff-header">
         <div>
-          <h2 style={{ margin: 0 }}>📦 Staff Panel — Orders</h2>
-          <div style={styles.subHeader}>⚡ Assign drivers and mark orders delivered.</div>
+          <h2 style={{ margin: 0, fontSize: "20px" }}>📦 Staff Panel — Orders</h2>
+          <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--brand)", marginTop: "4px" }}>
+            ⚡ Assign drivers and mark orders delivered.
+          </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontWeight: "600", color: "#333" }}>👤 {staffName}</span>
-
-          <button onClick={handleChangePassword} style={styles.changeBtn}>
-            🔑 Change Password
-          </button>
-
-          <button onClick={handleLogout} style={styles.logoutBtn}>
-            🚪 Logout
-          </button>
+          <span style={{ fontWeight: 600, color: "var(--ink-soft)" }}>👤 {staffName}</span>
+          <button onClick={handleChangePassword} className="btn btn-outline btn-sm">🔑 Change Password</button>
+          <button onClick={handleLogout} className="btn btn-danger btn-sm">🚪 Logout</button>
         </div>
       </header>
 
       {/* ✅ Filters (Incoming → Delivered → All) */}
-      <div style={styles.tabs}>
-        {[
-          { key: STATUSES.PENDING, label: "Incoming Orders" },
-          { key: STATUSES.ASSIGNED, label: "Assigned Driver" },
-          { key: STATUSES.DELIVERED, label: "Delivered" },
-          { key: "All", label: "All" },
-        ].map((t) => (
+      <div className="tabs-row">
+        {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setFilter(t.key)}
-            style={{ ...styles.tab, ...(filter === t.key ? styles.tabActive : {}) }}
+            className={`pill${filter === t.key ? " is-active" : ""}`}
           >
             {t.label}
           </button>
@@ -198,144 +195,84 @@ export default function StaffPanel() {
       </div>
 
       {/* Orders Table */}
-      <div style={styles.card}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Placed</th>
-              <th>ETA</th>
-              <th>Customer</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Driver</th>
-              <th>Status</th>
-              <th style={{ textAlign: "right" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((o) => (
-              <tr key={o.id}>
-              <td>{o.id}</td>
-              <td>{fmtDateTime(o.orderDateTime)}</td>
-              <td>{o.eta ? fmtDateTime(o.eta) : "—"}</td>
-            
-              {/* FIX: Show actual customer name */}
-              <td>{o.customerName}</td>
-            
-              {/* FIX: Items count */}
-              <td>
-              {o.items.map(i => `${i.name} x${i.qty}`).join(", ")}
-</td>
-            
-              {/* FIX: Money safe */}
-              <td>{fmtMoney(o.total)}</td>
-            
-              {/* FIX: Driver */}
-              <td>
-        {o.orderStatus === STATUSES.PENDING ? (
-          <div style={{ display: "flex", gap: 6 }}>
-        <select
-          onChange={(e) => assignDriver(o.id, e.target.value)}
-          style={{ padding: "4px 8px", borderRadius: 6 }}
-          defaultValue=""
-        >
-          <option value="" disabled>Assign Driver</option>
-          {drivers.map(d => (
-             <option key={d.driverId} value={d.driverId}>
-             {d.firstName} {d.lastName}
-           </option>
-         ))}
-        </select>
+      <div className="panel-section">
+        <div className="card table-wrap scroll-x">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Placed</th>
+                <th>ETA</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Driver</th>
+                <th>Status</th>
+                <th style={{ textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={9} style={{ textAlign: "center", color: "var(--muted)", padding: "28px" }}>
+                    No orders in this view yet.
+                  </td>
+                </tr>
+              )}
+              {filtered.map((o) => (
+                <tr key={o.id}>
+                <td>#{o.id}</td>
+                <td>{fmtDateTime(o.orderDateTime)}</td>
+                <td>{o.eta ? fmtDateTime(o.eta) : "—"}</td>
+                <td>{o.customerName}</td>
+                <td>{o.items.map(i => `${i.name} x${i.qty}`).join(", ")}</td>
+                <td style={{ fontWeight: 700 }}>{fmtMoney(o.total)}</td>
+
+                <td>
+          {o.orderStatus === STATUSES.PENDING ? (
+            <select
+              onChange={(e) => assignDriver(o.id, e.target.value)}
+              className="input"
+              style={{ padding: "6px 8px", fontSize: "13px" }}
+              defaultValue=""
+            >
+              <option value="" disabled>Assign Driver</option>
+              {drivers.map(d => (
+                 <option key={d.driverId} value={d.driverId}>
+                 {d.firstName} {d.lastName}
+               </option>
+             ))}
+            </select>
+        ) : (
+            <span>{o.driver ? o.driver.firstName : "—"}</span>
+        )}
+          </td>
+
+                <td>
+                  <span className={`badge ${o.orderStatus === STATUSES.DELIVERED ? "badge-success" : o.orderStatus === STATUSES.ASSIGNED ? "badge-neutral" : "badge-danger"}`}>
+                    {o.orderStatus}
+                  </span>
+                </td>
+
+                <td style={{ textAlign: "right" }}>
+                  {o.orderStatus !== STATUSES.DELIVERED ? (
+                    <button className="btn btn-primary btn-sm" onClick={() => markDelivered(o.id)}>
+                      Mark Delivered
+                    </button>
+                  ) : (
+                    <div style={{ fontSize: "11px", color: "var(--muted)", lineHeight: "1.4" }}>
+                      ✅ Delivered<br />
+                      <span style={{ fontStyle: "italic" }}>{fmtDateTime(o.deliveredAt)}</span>
+                    </div>
+                  )}
+                </td>
+              </tr>
+
+              ))}
+            </tbody>
+          </table>
         </div>
-      ) : (
-          <span>{o.driver ? o.driver.firstName : "—"}</span>
-      )}
-        </td>
-            
-              {/* FIX: Status */}
-              <td>{o.orderStatus}</td>
-            
-              <td style={{ textAlign: "right" }}>
-                {o.orderStatus !== STATUSES.DELIVERED ? (
-                  <button style={styles.smallBtn} onClick={() => markDelivered(o.id)}>
-                    Mark Delivered
-                  </button>
-                ) : (
-                  <div style={{ fontSize: 11, color: "#666", lineHeight: "1.4" }}>
-                    ✅ Delivered<br />
-                    <span style={{ fontStyle: "italic" }}>
-                      {fmtDateTime(o.deliveredAt)}
-                    </span>
-                  </div>
-                )}
-              </td>
-            </tr>
-            
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );
 }
-
-// ----- Styles -----
-const styles = {
-  page: { padding: 20, fontFamily: "Inter, system-ui, Arial, sans-serif" },
-  header: {
-    marginBottom: 20,
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  subHeader: { fontSize: 16, fontWeight: "600", color: "#ff5722", marginTop: "6px" },
-  tabs: { display: "flex", gap: 10, marginBottom: 15 },
-  card: {
-    background: "#fff",
-    border: "1px solid #eee",
-    borderRadius: 10,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-    overflow: "hidden",
-  },
-  table: { width: "100%", borderCollapse: "collapse" },
-  select: { padding: "6px 10px", borderRadius: 6, border: "1px solid #ccc" },
-  smallBtn: {
-    padding: "6px 10px",
-    borderRadius: 6,
-    border: "1px solid #ddd",
-    background: "#ff5722",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: 12,
-  },
-  logoutBtn: {
-    padding: "8px 14px",
-    borderRadius: 8,
-    border: "none",
-    background: "#ff4444",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  changeBtn: {
-    padding: "8px 14px",
-    borderRadius: 8,
-    border: "none",
-    background: "#ff5722",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  tab: {
-    padding: "8px 12px",
-    borderRadius: 999,
-    border: "1px solid #ddd",
-    background: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: 13,
-  },
-  tabActive: { background: "#ffefe7", borderColor: "#ff5722", color: "#ff5722" },
-};

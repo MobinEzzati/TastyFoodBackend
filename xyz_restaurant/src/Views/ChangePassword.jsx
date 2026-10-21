@@ -49,105 +49,43 @@ export default function ChangePassword() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>🔑 Change Password</h2>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <h2 className="auth-title">🔑 Change Password</h2>
+        <p className="auth-subtitle">Update your staff account password</p>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.field}>
-            <label style={styles.label}>Current Password</label>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className="field">
+            <label className="label">Current Password</label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              style={styles.input}
+              className="input"
             />
           </div>
 
-          <div style={styles.field}>
-            <label style={styles.label}>New Password</label>
+          <div className="field">
+            <label className="label">New Password</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              style={styles.input}
+              className="input"
             />
           </div>
 
-          {message && <p style={styles.message}>{message}</p>}
+          {message && <p className={message.startsWith("✅") ? "field-success" : "field-error"}>{message}</p>}
 
-          <button type="submit" style={styles.button}>
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "13px" }}>
             Update Password
           </button>
         </form>
 
-        <button style={styles.backBtn} onClick={() => navigate("/staffpanel")}>
+        <button className="btn btn-ghost" style={{ marginTop: "16px" }} onClick={() => navigate("/staffpanel")}>
           ← Back
         </button>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#f5f5f5",
-  },
-  card: {
-    background: "#fff",
-    padding: "40px",
-    borderRadius: "12px",
-    width: "450px",
-    textAlign: "center",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    position: "relative",
-  },
-  title: {
-    fontSize: "26px",
-    marginBottom: "30px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-  },
-  field: { textAlign: "left" },
-  label: {
-    fontWeight: "bold",
-    display: "block",
-    marginBottom: "6px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    fontSize: "15px",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-  },
-  button: {
-    background: "#ff5722",
-    color: "#fff",
-    border: "none",
-    padding: "10px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-    marginTop: "10px",
-  },
-  backBtn: {
-    marginTop: "20px",
-    background: "transparent",
-    border: "none",
-    color: "#007bff",
-    cursor: "pointer",
-    textDecoration: "underline",
-  },
-  message: {
-    color: "red",
-    fontSize: "14px",
-  },
-};

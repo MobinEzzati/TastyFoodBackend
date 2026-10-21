@@ -24,59 +24,38 @@ function CustomerLogin() {
   };
 
   return (
-    <div style={styles.container}>
-      <h2>👤 Customer Login</h2>
-      <form onSubmit={handleLogin} style={styles.form}>
-        <input
-          type="text"
-          placeholder="Enter Unique Number"
-          value={uniqueId}
-          onChange={(e) => setUniqueId(e.target.value)}
-          style={styles.input}
-        />
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit" style={styles.button}>
-          Login
-        </button>
-      </form>
-      <p>
-        New user?{" "}
-        <span
-          style={{ color: "#ff5722", cursor: "pointer" }}
-          onClick={() => navigate("/customerregister")}
-        >
-          Register here
-        </span>
-      </p>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <button className="btn btn-ghost auth-back" onClick={() => navigate("/")}>← Back</button>
+        <h2 className="auth-title">👤 Customer Login</h2>
+        <p className="auth-subtitle">Sign in with your frequent eater number</p>
+
+        <form onSubmit={handleLogin} className="field" style={{ gap: "14px" }}>
+          <input
+            type="text"
+            placeholder="Enter Unique Number"
+            value={uniqueId}
+            onChange={(e) => setUniqueId(e.target.value)}
+            className="input"
+          />
+          {error && <p className="field-error">{error}</p>}
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "13px" }}>
+            Login
+          </button>
+        </form>
+
+        <p style={{ marginTop: "18px", fontSize: "14px", color: "var(--ink-soft)" }}>
+          New user?{" "}
+          <span
+            style={{ color: "var(--brand)", cursor: "pointer", fontWeight: 600 }}
+            onClick={() => navigate("/customerregister")}
+          >
+            Register here
+          </span>
+        </p>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: "400px",
-    margin: "50px auto",
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    background: "#fff",
-    textAlign: "center",
-  },
-  form: { display: "flex", flexDirection: "column", gap: "12px" },
-  input: {
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-  },
-  button: {
-    padding: "10px",
-    backgroundColor: "#ff5722",
-    border: "none",
-    color: "#fff",
-    borderRadius: "6px",
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
-};
 
 export default CustomerLogin;

@@ -157,25 +157,25 @@ function PaymentScreen({ onClose, cartItems }) {
 
   const fetchCustomerByCode = async () => {
     if (!customerCode.trim()) return;
-  
+
     setLoadingCustomer(true);
     setErrors({});
-  
+
     try {
       // 1️⃣ Fetch customer by unique code
       const customerRes = await axios.get(
         `http://localhost:8080/api/customers/code/${customerCode.trim()}`
       );
-  
+
       const customer = customerRes.data;
       console.log("Fetched customer:", customer);
-  
+
       if (!customer.approved) {
         alert("❌ This customer is not approved yet.");
         setLoadingCustomer(false);
         return;
       }
-  
+
       // 2️⃣ Autofill delivery info from customer
       setFormData((prev) => ({
         ...prev,
@@ -187,19 +187,19 @@ function PaymentScreen({ onClose, cartItems }) {
         deliveryState: customer.deliveryAddress?.state || "",
         deliveryZipcode: customer.deliveryAddress?.zipCode || ""
       }));
-  
+
       // ⭐ Save name for success screen
       setCustomerName(`${customer.firstName} ${customer.lastName}`);
-  
+
       // 3️⃣ Fetch saved credit card (if exists)
       try {
         const cardRes = await axios.get(
           `http://localhost:8080/api/cards/customer/${customer.customerNumber}`
         );
-  
+
         const card = cardRes.data;
         console.log("Fetched saved card:", card);
-  
+
         // Autofill billing + card info
         setFormData((prev) => ({
           ...prev,
@@ -214,16 +214,16 @@ function PaymentScreen({ onClose, cartItems }) {
           state: customer.deliveryAddress?.state || "",
           zipcode: customer.deliveryAddress?.zipCode || "",
         }));
-  
+
         // Skip payment method selection since card is saved
         setSkipPaymentMethod(true);
         setSelectedMethod("Saved Card");
-  
+
       } catch (cardErr) {
         console.log("No saved card for this customer.");
         setSkipPaymentMethod(false);
       }
-  
+
       // 4️⃣ Discount UI flag (backend will compute real discount)
       if (customer.points >= 100) {
         setUsedDiscount(true);
@@ -231,16 +231,16 @@ function PaymentScreen({ onClose, cartItems }) {
       } else {
         setUsedDiscount(false);
       }
-  
+
     } catch (err) {
       alert("❌ Customer not found for this code.");
       console.error(err);
       setUsedDiscount(false);
     }
-  
+
     setLoadingCustomer(false);
   };
-  
+
 
 
   // 📊 For success screen: compute bill & points (UI only)
@@ -259,46 +259,38 @@ function PaymentScreen({ onClose, cartItems }) {
     );
 
     return (
-      <div style={styles.overlay}>
-        <div style={styles.modal}>
-          <h2 style={styles.title}>🎉 Order Placed Successfully!</h2>
+      <div className="modal-overlay">
+        <div className="modal-sheet" style={{ width: "520px", maxWidth: "100%", padding: "32px", maxHeight: "90vh", overflowY: "auto" }}>
+          <h2 style={{ textAlign: "center", marginBottom: "18px" }}>🎉 Order Placed Successfully!</h2>
 
-          {customerName && (
-            <p>
-              <strong>Customer:</strong> {customerName}
-            </p>
-          )}
-          <p>
-            <strong>Order ID:</strong> {lastOrder.orderId}
-          </p>
-          <p>
-            <strong>Order Date & Time:</strong> {orderDate}
-          </p>
-          <p>
-            <strong>Estimated Delivery Time:</strong> {eta}
-          </p>
+          <div className="card" style={{ padding: "16px 18px", marginBottom: "18px", background: "#faf7f5" }}>
+            {customerName && (
+              <p style={{ margin: "4px 0" }}><strong>Customer:</strong> {customerName}</p>
+            )}
+            <p style={{ margin: "4px 0" }}><strong>Order ID:</strong> {lastOrder.orderId}</p>
+            <p style={{ margin: "4px 0" }}><strong>Order Date & Time:</strong> {orderDate}</p>
+            <p style={{ margin: "4px 0" }}><strong>Estimated Delivery Time:</strong> {eta}</p>
+          </div>
 
-          <hr />
-
-          {/* Bonus UI: points & discount info */}
-          <h3>Reward Summary (UI)</h3>
-          <p>
-            <strong>Bill before service & tip:</strong>{" "}
-            ${billBeforeCharges.toFixed(2)}
+          <h3 className="panel-card-title">Reward Summary</h3>
+          <p style={{ margin: "4px 0", fontSize: "14px" }}>
+            <strong>Bill before service & tip:</strong> ${billBeforeCharges.toFixed(2)}
           </p>
-          <p>
-            <strong>Points earned this order:</strong>{" "}
-            {pointsEarnedThisOrder} pts
+          <p style={{ margin: "4px 0", fontSize: "14px" }}>
+            <strong>Points earned this order:</strong> {pointsEarnedThisOrder} pts
           </p>
-          <p>
+          <p style={{ margin: "4px 0 18px", fontSize: "14px" }}>
             <strong>Discount applied:</strong>{" "}
-            {usedDiscount ? "✅ 10% discount (UI – real calculation in backend later)" : "None this order"}
+            {usedDiscount ? (
+              <span className="badge badge-success">10% discount</span>
+            ) : (
+              "None this order"
+            )}
           </p>
 
-          {/* Delivery progress */}
           <OrderTracking deliveryTime={eta} />
 
-          <button style={styles.primaryBtn} onClick={onClose}>
+          <button className="btn btn-primary" style={{ width: "100%", marginTop: "20px", padding: "13px" }} onClick={onClose}>
             Close
           </button>
         </div>
@@ -308,52 +300,37 @@ function PaymentScreen({ onClose, cartItems }) {
 
   // 🧾 Main modal (steps 1 & 2)
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-sheet"
+        style={{ width: "520px", maxWidth: "100%", padding: "32px", maxHeight: "90vh", overflowY: "auto" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Steps */}
-        <div style={styles.steps}>
-          <div
-            style={{ ...styles.step, ...(step >= 1 ? styles.activeStep : {}) }}
-          >
-            1. Delivery
-          </div>
-          <div
-            style={{ ...styles.step, ...(step >= 2 ? styles.activeStep : {}) }}
-          >
-            2. Payment
-          </div>
-          <div
-            style={{ ...styles.step, ...(step >= 3 ? styles.activeStep : {}) }}
-          >
-            3. Success
-          </div>
+        <div className="step-indicator">
+          <div className={`step-indicator__item${step >= 1 ? " is-active" : ""}`}>1. Delivery</div>
+          <div className={`step-indicator__item${step >= 2 ? " is-active" : ""}`}>2. Payment</div>
+          <div className={`step-indicator__item${step >= 3 ? " is-active" : ""}`}>3. Success</div>
         </div>
 
         {/* Step 1: Delivery + Frequent Eater Number section */}
         {step === 1 && (
           <>
             {/* Frequent Eater Box (UI) */}
-            <div
-              style={{
-                marginBottom: "20px",
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                background: "#fff8f2",
-              }}
-            >
-              <h3 style={{ marginTop: 0 }}>Have a Frequent Eater Number?</h3>
+            <div className="frequent-eater">
+              <h3 style={{ fontSize: "14.5px", marginBottom: "10px" }}>Have a Frequent Eater Number?</h3>
 
               <input
                 type="text"
                 placeholder="Enter your unique code (e.g. FE1234)"
                 value={customerCode}
                 onChange={(e) => setCustomerCode(e.target.value)}
-                style={styles.input}
+                className="input"
+                style={{ marginBottom: "10px" }}
               />
 
               <button
-                style={styles.primaryBtn}
+                className="btn btn-primary btn-sm"
                 onClick={fetchCustomerByCode}
                 disabled={!customerCode || loadingCustomer}
               >
@@ -361,111 +338,107 @@ function PaymentScreen({ onClose, cartItems }) {
               </button>
 
               {usedDiscount && (
-                <p style={{ color: "green", fontSize: "13px" }}>
-                  ✅ Discount will be applied for this order (UI only, backend
-                  later).
+                <p className="field-success" style={{ marginTop: "8px" }}>
+                  ✅ Discount will be applied for this order.
                 </p>
               )}
             </div>
 
-            <h2 style={styles.title}>Delivery Address</h2>
-            <form style={styles.form} onSubmit={handleSubmitDelivery}>
-              <input
-                style={styles.input}
-                name="deliveryFirstName"
-                placeholder="First Name"
-                value={formData.deliveryFirstName}
-                onChange={handleChange}
-              />
-              {errors.deliveryFirstName && (
-                <p style={styles.error}>{errors.deliveryFirstName}</p>
-              )}
+            <h2 style={{ textAlign: "center", marginBottom: "16px", fontSize: "19px" }}>Delivery Address</h2>
+            <form style={{ display: "flex", flexDirection: "column", gap: "12px" }} onSubmit={handleSubmitDelivery}>
+              <div className="field">
+                <input
+                  className="input"
+                  name="deliveryFirstName"
+                  placeholder="First Name"
+                  value={formData.deliveryFirstName}
+                  onChange={handleChange}
+                />
+                {errors.deliveryFirstName && <p className="field-error">{errors.deliveryFirstName}</p>}
+              </div>
 
-              <input
-                style={styles.input}
-                name="deliveryLastName"
-                placeholder="Last Name"
-                value={formData.deliveryLastName}
-                onChange={handleChange}
-              />
-              {errors.deliveryLastName && (
-                <p style={styles.error}>{errors.deliveryLastName}</p>
-              )}
+              <div className="field">
+                <input
+                  className="input"
+                  name="deliveryLastName"
+                  placeholder="Last Name"
+                  value={formData.deliveryLastName}
+                  onChange={handleChange}
+                />
+                {errors.deliveryLastName && <p className="field-error">{errors.deliveryLastName}</p>}
+              </div>
 
-              <input
-                style={styles.input}
-                name="deliveryPhone"
-                placeholder="Phone"
-                value={formData.deliveryPhone}
-                onChange={handleChange}
-              />
-              {errors.deliveryPhone && (
-                <p style={styles.error}>{errors.deliveryPhone}</p>
-              )}
+              <div className="field">
+                <input
+                  className="input"
+                  name="deliveryPhone"
+                  placeholder="Phone"
+                  value={formData.deliveryPhone}
+                  onChange={handleChange}
+                />
+                {errors.deliveryPhone && <p className="field-error">{errors.deliveryPhone}</p>}
+              </div>
 
-              <input
-                style={styles.input}
-                name="deliveryStreet"
-                placeholder="Street"
-                value={formData.deliveryStreet}
-                onChange={handleChange}
-              />
-              {errors.deliveryStreet && (
-                <p style={styles.error}>{errors.deliveryStreet}</p>
-              )}
+              <div className="field">
+                <input
+                  className="input"
+                  name="deliveryStreet"
+                  placeholder="Street"
+                  value={formData.deliveryStreet}
+                  onChange={handleChange}
+                />
+                {errors.deliveryStreet && <p className="field-error">{errors.deliveryStreet}</p>}
+              </div>
 
+              <div className="field">
+                <input
+                  className="input"
+                  name="buildingNumber"
+                  placeholder="Building Number"
+                  value={formData.buildingNumber}
+                  onChange={handleChange}
+                />
+                {errors.buildingNumber && <p className="field-error">{errors.buildingNumber}</p>}
+              </div>
 
-<input
-  style={styles.input}
-  name="buildingNumber"              // 🔁 changed from "deliveryBuilding"
-  placeholder="Building Number"
-  value={formData.buildingNumber}
-  onChange={handleChange}
-/>
-              {errors.buildingNumber && (
-                <p style={styles.error}>{errors.buildingNumber}</p>
-              )}
+              <div className="field">
+                <input
+                  className="input"
+                  name="deliveryCity"
+                  placeholder="City"
+                  value={formData.deliveryCity}
+                  onChange={handleChange}
+                />
+                {errors.deliveryCity && <p className="field-error">{errors.deliveryCity}</p>}
+              </div>
 
+              <div className="field">
+                <select
+                  className="input"
+                  name="deliveryState"
+                  value={formData.deliveryState}
+                  onChange={handleChange}
+                >
+                  <option value="">Select State</option>
+                  {states.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+                {errors.deliveryState && <p className="field-error">{errors.deliveryState}</p>}
+              </div>
 
+              <div className="field">
+                <input
+                  className="input"
+                  name="deliveryZipcode"
+                  placeholder="Zipcode"
+                  value={formData.deliveryZipcode}
+                  onChange={handleChange}
+                />
+                {errors.deliveryZipcode && <p className="field-error">{errors.deliveryZipcode}</p>}
+              </div>
 
-              <input
-                style={styles.input}
-                name="deliveryCity"
-                placeholder="City"
-                value={formData.deliveryCity}
-                onChange={handleChange}
-              />
-              {errors.deliveryCity && (
-                <p style={styles.error}>{errors.deliveryCity}</p>
-              )}
-
-              <select
-                style={styles.input}
-                name="deliveryState"
-                value={formData.deliveryState}
-                onChange={handleChange}
-              >
-                <option value="">Select State</option>
-                {states.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-              {errors.deliveryState && (
-                <p style={styles.error}>{errors.deliveryState}</p>
-              )}
-
-              <input
-                style={styles.input}
-                name="deliveryZipcode"
-                placeholder="Zipcode"
-                value={formData.deliveryZipcode}
-                onChange={handleChange}
-              />
-              {errors.deliveryZipcode && (
-                <p style={styles.error}>{errors.deliveryZipcode}</p>
-              )}
-
-              <button type="submit" style={styles.primaryBtn}>
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "13px", marginTop: "6px" }}>
                 Continue to Payment ➡️
               </button>
             </form>
@@ -477,172 +450,145 @@ function PaymentScreen({ onClose, cartItems }) {
           <>
             {(!selectedMethod && !skipPaymentMethod) ? (
               <>
-                <h2 style={styles.title}>Select Payment Method</h2>
-                <div style={styles.methodList}>
+                <h2 style={{ textAlign: "center", marginBottom: "16px", fontSize: "19px" }}>Select Payment Method</h2>
+                <div className="payment-methods">
                   {paymentMethods.map((m) => {
                     const isSelected = selectedMethod === m.name;
-                    const isHovered = hoveredMethod === m.name;
                     return (
                       <div
                         key={m.name}
-                        style={{
-                          ...styles.methodCard,
-                          ...(isHovered ? styles.methodCardHover : {}),
-                          ...(isSelected ? styles.methodCardSelected : {}),
-                        }}
+                        className={`payment-method${isSelected ? " is-selected" : ""}`}
                         onMouseEnter={() => setHoveredMethod(m.name)}
                         onMouseLeave={() => setHoveredMethod(null)}
                         onClick={() => setSelectedMethod(m.name)}
                       >
-                        <img
-                          src={m.logo}
-                          alt={m.name}
-                          style={styles.logoImg}
-                        />
+                        <img src={m.logo} alt={m.name} />
                         <span>{m.name}</span>
                       </div>
                     );
                   })}
                 </div>
-                <button
-                  type="button"
-                  style={styles.secondaryBtn}
-                  onClick={() => setStep(1)}
-                >
+                <button type="button" className="btn btn-outline" style={{ marginTop: "18px" }} onClick={() => setStep(1)}>
                   ⬅ Back
                 </button>
               </>
             ) : (
               <>
-                <h2 style={styles.title}>{selectedMethod} Payment Info</h2>
-                <form style={styles.form} onSubmit={handleSubmitPayment}>
-  {/* CARD NUMBER */}
-  <input
-    style={styles.input}
-    name="cardNumber"
-    placeholder="Card Number (16 digits)"
-    value={formData.cardNumber}
-    onChange={handleChange}
-  />
-  {errors.cardNumber && <p style={styles.error}>{errors.cardNumber}</p>}
+                <h2 style={{ textAlign: "center", marginBottom: "16px", fontSize: "19px" }}>{selectedMethod} Payment Info</h2>
+                <form style={{ display: "flex", flexDirection: "column", gap: "12px" }} onSubmit={handleSubmitPayment}>
+                  <div className="field">
+                    <input
+                      className="input"
+                      name="cardNumber"
+                      placeholder="Card Number (16 digits)"
+                      value={formData.cardNumber}
+                      onChange={handleChange}
+                    />
+                    {errors.cardNumber && <p className="field-error">{errors.cardNumber}</p>}
+                  </div>
 
-  {/* CARD FIRST NAME */}
-  <input
-    style={styles.input}
-    name="firstName"
-    placeholder="First Name"
-    value={formData.firstName}
-    onChange={handleChange}
-  />
-  {errors.firstName && <p style={styles.error}>{errors.firstName}</p>}
+                  <div className="field">
+                    <input
+                      className="input"
+                      name="firstName"
+                      placeholder="First Name"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                    />
+                    {errors.firstName && <p className="field-error">{errors.firstName}</p>}
+                  </div>
 
-  {/* CARD LAST NAME */}
-  <input
-    style={styles.input}
-    name="lastName"
-    placeholder="Last Name"
-    value={formData.lastName}
-    onChange={handleChange}
-  />
-  {errors.lastName && <p style={styles.error}>{errors.lastName}</p>}
+                  <div className="field">
+                    <input
+                      className="input"
+                      name="lastName"
+                      placeholder="Last Name"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                    />
+                    {errors.lastName && <p className="field-error">{errors.lastName}</p>}
+                  </div>
 
-  {/* EXPIRATION */}
-  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-    <label htmlFor="expiration" style={styles.label}>
-      Exp. Month/Year
-    </label>
-    <input
-      id="expiration"
-      style={styles.input}
-      type="month"
-      name="expiration"
-      value={formData.expiration}
-      onChange={handleChange}
-    />
-  </div>
-  {errors.expiration && <p style={styles.error}>{errors.expiration}</p>}
+                  <div className="field">
+                    <label htmlFor="expiration" className="label">Exp. Month/Year</label>
+                    <input
+                      id="expiration"
+                      className="input"
+                      type="month"
+                      name="expiration"
+                      value={formData.expiration}
+                      onChange={handleChange}
+                    />
+                    {errors.expiration && <p className="field-error">{errors.expiration}</p>}
+                  </div>
 
-  {/* CVC */}
-  <input
-    style={styles.input}
-    name="cvc"
-    placeholder="CVC"
-    value={formData.cvc}
-    onChange={handleChange}
-  />
-  {errors.cvc && <p style={styles.error}>{errors.cvc}</p>}
+                  <div className="field">
+                    <input
+                      className="input"
+                      name="cvc"
+                      placeholder="CVC"
+                      value={formData.cvc}
+                      onChange={handleChange}
+                    />
+                    {errors.cvc && <p className="field-error">{errors.cvc}</p>}
+                  </div>
 
-  {/* ---------------------------- */}
-  {/* ⭐ BILLING ADDRESS SECTION ⭐ */}
-  {/* ---------------------------- */}
-  <h3 style={{ marginTop: "15px" }}>Billing Address</h3>
+                  <h3 className="panel-card-title" style={{ marginTop: "8px" }}>Billing Address</h3>
 
-  <input
-    style={styles.input}
-    name="street"
-    placeholder="Street"
-    value={formData.street}
-    onChange={handleChange}
-  />
+                  <input
+                    className="input"
+                    name="street"
+                    placeholder="Street"
+                    value={formData.street}
+                    onChange={handleChange}
+                  />
 
-  <input
-    style={styles.input}
-    name="buildingNumber"
-    placeholder="Building Number"
-    value={formData.buildingNumber}
-    onChange={handleChange}
-  />
+                  <input
+                    className="input"
+                    name="buildingNumber"
+                    placeholder="Building Number"
+                    value={formData.buildingNumber}
+                    onChange={handleChange}
+                  />
 
-  <input
-    style={styles.input}
-    name="city"
-    placeholder="City"
-    value={formData.city}
-    onChange={handleChange}
-  />
+                  <input
+                    className="input"
+                    name="city"
+                    placeholder="City"
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
 
-  <select
-    style={styles.input}
-    name="state"
-    value={formData.state}
-    onChange={handleChange}
-  >
-    <option value="">Select State</option>
-    {["CA", "NY", "TX", "FL", "IL", "MA","MN", "Other"].map((s) => (
-      <option key={s}>{s}</option>
-    ))}
-  </select>
+                  <select
+                    className="input"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select State</option>
+                    {["CA", "NY", "TX", "FL", "IL", "MA","MN", "Other"].map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
+                  </select>
 
-  <input
-    style={styles.input}
-    name="zipcode"
-    placeholder="Zipcode"
-    value={formData.zipcode}
-    onChange={handleChange}
-  />
+                  <input
+                    className="input"
+                    name="zipcode"
+                    placeholder="Zipcode"
+                    value={formData.zipcode}
+                    onChange={handleChange}
+                  />
 
-  {/* BUTTONS */}
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      gap: "10px",
-      marginTop: "15px",
-    }}
-  >
-    <button
-      type="button"
-      style={styles.secondaryBtn}
-      onClick={() => setStep(1)}
-    >
-      ⬅ Back
-    </button>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", marginTop: "10px" }}>
+                    <button type="button" className="btn btn-outline" onClick={() => setStep(1)}>
+                      ⬅ Back
+                    </button>
 
-    <button type="submit" style={{ ...styles.primaryBtn, flex: 1 }}>
-      Pay Now 💳
-    </button>
-  </div>
-</form>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                      Pay Now 💳
+                    </button>
+                  </div>
+                </form>
               </>
             )}
           </>
@@ -651,103 +597,5 @@ function PaymentScreen({ onClose, cartItems }) {
     </div>
   );
 }
-
-// ✅ Styles (same as before, with label added)
-const styles = {
-  overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  modal: {
-    background: "#fff",
-    padding: "30px",
-    borderRadius: "12px",
-    width: "500px",
-    maxHeight: "90vh",
-    overflowY: "auto",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
-  },
-  steps: { display: "flex", justifyContent: "space-between", marginBottom: "20px" },
-  step: {
-    flex: 1,
-    textAlign: "center",
-    padding: "8px",
-    borderRadius: "6px",
-    background: "#eee",
-    margin: "0 5px",
-    fontSize: "14px",
-    fontWeight: "500",
-  },
-  activeStep: { background: "#ff5722", color: "#fff" },
-  title: { textAlign: "center", marginBottom: "15px" },
-  form: { display: "flex", flexDirection: "column", gap: "12px" },
-  input: {
-    padding: "10px",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-    fontSize: "14px",
-  },
-  primaryBtn: {
-    marginTop: "15px",
-    padding: "12px",
-    backgroundColor: "#ff5722",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-    fontSize: "16px",
-  },
-  secondaryBtn: {
-    marginTop: "15px",
-    padding: "10px 14px",
-    backgroundColor: "transparent",
-    color: "#ff5722",
-    border: "2px solid #ff5722",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-    fontSize: "14px",
-  },
-  methodList: { display: "flex", flexDirection: "column", gap: "12px" },
-  methodCard: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "14px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    cursor: "pointer",
-    transition: "all 0.2s ease-in-out",
-    fontSize: "16px",
-    backgroundColor: "#fff",
-  },
-  methodCardHover: {
-    transform: "scale(1.03)",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-  },
-  methodCardSelected: {
-    border: "2px solid #ff5722",
-    backgroundColor: "#fff7f3",
-    transform: "scale(1.05)",
-    boxShadow: "0 6px 18px rgba(255,87,34,0.3)",
-  },
-  logoImg: {
-    width: "50px",
-    height: "30px",
-    objectFit: "contain",
-    marginRight: "10px",
-  },
-  error: { color: "red", fontSize: "12px", margin: 0 },
-  label: { fontSize: "13px", fontWeight: "500" },
-};
 
 export default PaymentScreen;

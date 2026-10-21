@@ -26,20 +26,20 @@ const isValidName = (name) => /^[A-Za-z]{2,}$/.test(name);
     if (!passwordForm.currentPassword) {
       errors.currentPassword = "Current password is required.";
     }
-  
+
     if (!passwordForm.newPassword || passwordForm.newPassword.length < 8) {
       errors.newPassword = "New password must be at least 8 characters.";
     }
-  
+
     // 🚫 Prevent using the same password again
     if (passwordForm.newPassword === passwordForm.currentPassword) {
       errors.newPassword = "New password cannot be the same as the current password.";
     }
-  
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       errors.confirmPassword = "Passwords do not match.";
     }
-  
+
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -141,72 +141,72 @@ const handleDriverChange = (e) => {
   // inside Dashboard.js (your file)
   const generateStaffCredentials = async () => {
     const { firstName, lastName, email } = newStaff;
-  
+
     if (!firstName || !lastName || !email) {
       alert("⚠️ Please enter first name, last name, and email");
       return;
     }
-  
+
     if (!isValidName(firstName) || !isValidName(lastName)) {
       alert("❌ Names must contain only letters and be at least 2 characters.");
       return;
     }
-  
+
     try {
       const res = await fetch(
         `http://localhost:8080/api/staff/create?firstName=${firstName}&lastName=${lastName}`,
         { method: "POST" }
       );
-  
+
       if (!res.ok) {
         const err = await res.text();
         alert("❌ " + err);
         return;
       }
-  
+
       const staffCreated = await res.json();
-  
+
       // Show credentials in popup
       setLastCreatedStaff({
         username: staffCreated.username,
         password: "(sent to email)",
       });
-  
+
       // Add to UI table
       setStaff([...staff, staffCreated]);
-  
+
       // Close + confirm
       setShowStaffPopup(false);
       setShowStaffConfirm(true);
-  
+
       // Reset form
       setNewStaff({ firstName: "", lastName: "", email: "" });
-  
+
     } catch (err) {
       console.error(err);
       alert("Server Error ❌");
     }
   };
-  
 
-  
+
+
 
   const handleDeleteStaff = () => {
     if (!selectedStaff) return;
-  
+
     const staffToDelete = staff.find(
       (s) => s.loginCredential.username === selectedStaff
     );
-  
+
     if (!staffToDelete) {
       alert("❌ Staff not found.");
       return;
     }
-  
+
     if (!window.confirm(`Are you sure you want to delete staff: ${selectedStaff}?`)) {
       return;
     }
-  
+
     fetch(`http://localhost:8080/api/staff/delete/${staffToDelete.staffId}`, {
       method: "DELETE",
     })
@@ -216,9 +216,9 @@ const handleDriverChange = (e) => {
           alert("❌ Delete failed: " + err);
           return;
         }
-  
+
         alert("🗑️ Staff deleted successfully!");
-  
+
         setStaff(staff.filter((s) => s.staffId !== staffToDelete.staffId));
         setShowDeleteStaffPopup(false);
         setSelectedStaff("");
@@ -228,8 +228,8 @@ const handleDriverChange = (e) => {
         console.log(err);
       });
   };
-  
-  
+
+
 
   // --- Client ---
   const handleClientChange = (e) => {
@@ -246,34 +246,34 @@ const handleDriverChange = (e) => {
 
   const generateDriverData = async () => {
     const { firstName, lastName } = newDriver;
-  
+
     if (!firstName || !lastName) {
       toast.warn("⚠️ Enter first & last name");
       return;
     }
-  
+
     try {
       const url = `http://localhost:8080/api/drivers/add?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`;
-  
+
       const res = await fetch(url, { method: "POST" });
-  
+
       if (!res.ok) {
         const errorMsg = await res.text();
         toast.error(errorMsg || "Failed to add driver.");
         return;
       }
-  
+
       const driverCreated = await res.json();
-  
+
       toast.success("🚀 Driver added successfully!");
-  
+
       // Update UI
       setDrivers([...drivers, driverCreated]);
-  
+
       // Close popup + reset
       setShowDriverPopup(false);
       setNewDriver({ firstName: "", lastName: "" });
-  
+
     } catch (err) {
       console.error(err);
       toast.error("🚨 Server Error");
@@ -282,51 +282,51 @@ const handleDriverChange = (e) => {
 
   const handleDeleteDriver = async () => {
     if (!selectedDriver) return;
-  
+
     const unique = selectedDriver.trim();
-  
+
     console.log("Selected:", `"${selectedDriver}"`);
     console.log("Trimmed:", `"${unique}"`);
     console.log("Available drivers:", drivers.map(d => `"${d.driverUnique}"`));
-  
+
     // Find driver safely
     const driverToDelete = drivers.find(
       d => d.driverUnique.trim().toLowerCase() === unique.toLowerCase()
     );
-  
+
     if (!driverToDelete) {
       toast.error("❌ Driver not found (value mismatch)");
       return;
     }
-  
+
     if (!window.confirm(`Are you sure you want to remove driver: ${driverToDelete.driverUnique}?`)) {
       return;
     }
-  
+
     try {
       const res = await fetch(
         `http://localhost:8080/api/drivers/delete/${encodeURIComponent(driverToDelete.driverUnique.trim())}`,
         { method: "DELETE" }
       );
-  
+
       if (!res.ok) {
         const msg = await res.text();
         toast.error("❌ Delete failed: " + msg);
         return;
       }
-  
+
       // Update UI safely
       setDrivers(
         drivers.filter(
           d => d.driverUnique.trim().toLowerCase() !== unique.toLowerCase()
         )
       );
-  
+
       setSelectedDriver("");
       setShowDeleteDriverPopup(false);
-  
+
       toast.success("🗑️ Driver removed");
-  
+
     } catch (err) {
       console.error(err);
       toast.error("🚨 Server error");
@@ -334,38 +334,38 @@ const handleDriverChange = (e) => {
   };
 
 
-  
+
   const approveCustomer = async (id) => {
     try {
       const res = await fetch(`http://localhost:8080/api/customers/approve/${id}`, {
         method: "POST"
       });
-  
+
       if (!res.ok) {
         const err = await res.text();
         toast.error("❌ Approval failed: " + err);
         return;
       }
-  
+
       const updated = await res.json();
-  
+
       // update UI with backend value
       setCustomers(prev =>
         prev.map(c =>
           c.customerNumber === id ? updated : c
         )
       );
-  
+
       toast.success("✅ Customer approved!");
     } catch (err) {
       console.error(err);
       toast.error("🚨 Server error");
     }
   };
-  
-  
-  
-  
+
+
+
+
 
   const handleChangePasswordClick = () => {
     setShowChangePassword(true);
@@ -383,490 +383,369 @@ const handleDriverChange = (e) => {
         `http://localhost:8080/api/drivers/toggle/${driverUnique}`,
         { method: "POST" }
       );
-  
+
       if (!res.ok) {
         toast.error("Update failed");
         return;
       }
-  
+
       const updated = await res.json();
-  
+
       setDrivers(prev =>
         prev.map(d => (d.driverUnique === driverUnique ? updated : d))
       );
-  
+
       toast.success("Driver updated!");
     } catch (err) {
       console.error(err);
       toast.error("Server error");
     }
   };
-  
-  
-  
 
   return (
-    <div style={styles.container}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       {/* Header */}
-      <header style={styles.header}>
-  <div style={styles.left}>
-    <img src={logo} alt="Logo" style={styles.logo} />
-  </div>
-  <div style={styles.center}>
-    <h2 style={styles.title}>Admin Panel</h2>
-  </div>
-  <div style={styles.right}>
-    {/* <button style={styles.logout} onClick={handleChangePasswordClick}>
-      Change Password
-    </button> */}
-    <button style={styles.logout} onClick={handleLogout}>
-      Logout
-    </button>
-    <span style={{ fontWeight: "bold", color: "#333" }}>👤 Admin </span>
-    
-  </div>
-</header>
+      <header className="panel-header">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <img src={logo} alt="Logo" style={{ width: "46px", height: "46px", borderRadius: "50%" }} />
+          <h2>Admin Panel</h2>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <span style={{ fontWeight: 700 }}>👤 Admin</span>
+          <button
+            style={{ background: "#fff", color: "var(--brand)", border: "none", borderRadius: "8px", padding: "8px 16px", fontWeight: 700, cursor: "pointer" }}
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
       {/* Toolbar */}
-      <div style={styles.toolbar}>
-        <button style={styles.actionBtn} onClick={() => handleAction("Add Staff")}>
-          Add New Staff
-        </button>
-
-        <button style={styles.actionBtn} onClick={() => handleAction("Delete Staff")}>
-          Delete Staff
-        </button>
-        <button style={styles.actionBtn} onClick={() => handleAction("Add Driver")}>
-          Add Driver
-        </button>
-        <button style={styles.actionBtn} onClick={() => handleAction("Remove Driver")}>
-          Remove Driver
-        </button>
+      <div className="panel-toolbar">
+        <button className="btn btn-outline" onClick={() => handleAction("Add Staff")}>Add New Staff</button>
+        <button className="btn btn-outline" onClick={() => handleAction("Delete Staff")}>Delete Staff</button>
+        <button className="btn btn-outline" onClick={() => handleAction("Add Driver")}>Add Driver</button>
+        <button className="btn btn-outline" onClick={() => handleAction("Remove Driver")}>Remove Driver</button>
       </div>
 
       {/* Tables */}
-      <div style={styles.tablesContainer}>
-        {/* Staff */}
-        <div style={styles.tableContainer}>
-          <h3 style={styles.tableTitle}>Staff</h3>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.tableHeader}>Status</th>
-                <th style={styles.tableHeader}>FirstName</th>
-                <th style={styles.tableHeader}>LastName</th>
-                <th style={styles.tableHeader}>UserName</th>
-              </tr>
-            </thead>
-            <tbody>
-  {staff.map((user) => (
-    <tr key={user.staffId} style={styles.tableRow}>
+      <div className="panel-section">
+        <div className="panel-grid">
+          {/* Staff */}
+          <div className="card">
+            <h3 className="panel-card-title">Staff</h3>
+            <div className="table-wrap scroll-x">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Username</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staff.map((user) => (
+                    <tr key={user.staffId}>
+                      <td>
+                        <span className={`badge ${user.active ? "badge-success" : "badge-danger"}`}>
+                          {user.active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>{user.firstName}</td>
+                      <td>{user.lastName}</td>
+                      <td>{user.loginCredential?.username}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {/* ID */}
-      <td style={styles.tableCell}>
-        <span
-          style={{
-            padding: "4px 8px",
-            borderRadius: "12px",
-            fontSize: "12px",
-            fontWeight: "600",
-            color: "#fff",
-            backgroundColor: user.active ? "#4caf50" : "#f44336",
-          }}
-        >
-          {user.active ? "Active" : "Inactive"}
-        </span>
-      </td>
+          {/* ✅ Approval Popup */}
+          {showApprovalPopup && (
+            <div className="modal-overlay">
+              <div className="modal-sheet" style={{ width: "400px", padding: "24px", textAlign: "center" }}>
+                <h3>✅ Client Approved</h3>
+                <p>
+                  Email will be sent to <strong>{approvedClient?.number}</strong> with a
+                  unique Frequent Eater number.
+                </p>
+                <button className="btn btn-primary" onClick={() => setShowApprovalPopup(false)}>OK</button>
+              </div>
+            </div>
+          )}
 
-      {/* First Name */}
-      <td style={styles.tableCell}>{user.firstName}</td>
-
-      {/* Last Name */}
-      <td style={styles.tableCell}>{user.lastName}</td>
-
-      {/* Username */}
-      <td style={styles.tableCell}>
-        {user.loginCredential?.username}
-      </td>
-
-      {/* Active Status */}
-    
-
-    </tr>
-  ))}
-</tbody>
-          </table>
+          {/* Drivers */}
+          <div className="card">
+            <h3 className="panel-card-title">Drivers</h3>
+            <div className="table-wrap scroll-x">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Status</th>
+                    <th>Change Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drivers.map((driver) => (
+                    <tr key={driver.driverId}>
+                      <td>{driver.firstName}</td>
+                      <td>{driver.lastName}</td>
+                      <td>
+                        <span className={`badge ${driver.active ? "badge-success" : "badge-danger"}`}>
+                          {driver.active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className={`btn btn-sm ${driver.active ? "btn-danger" : "btn-primary"}`}
+                          onClick={() => toggleDriverActive(driver.driverUnique)}
+                        >
+                          {driver.active ? "Deactivate" : "Activate"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        {/* Customers
-         Table */}
-         
+        <div className="card" style={{ marginTop: "22px" }}>
+          <h3 className="panel-card-title">Customers</h3>
+          <div className="table-wrap scroll-x">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Delivery Address</th>
+                  <th>Billing Address</th>
+                  <th>Credit Card</th>
+                  <th>Approve</th>
+                  <th>Reward Code</th>
+                </tr>
+              </thead>
 
-
-  
-
-{/* ✅ Approval Popup */}
-{showApprovalPopup && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modal}>
-      <h3>✅ Client Approved</h3>
-      <p>
-        Email will be sent to <strong>{approvedClient?.number}</strong> with a
-        unique Frequent Eater number.
-      </p>
-      <button
-        style={styles.generateBtn}
-        onClick={() => setShowApprovalPopup(false)}
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
-
-        {/* Drivers */}
-        <div style={styles.tableContainer}>
-          <h3 style={styles.tableTitle}>Drivers</h3>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                  <th style={styles.tableHeader}>firstName</th>
-                  <th style={styles.tableHeader}>lastName</th>
-                  <th style={styles.tableHeader}>isActive</th>
-                  <th style={styles.tableHeader}>changeStatus</th>
-              </tr>
-            </thead>
-            <tbody>
-
-  {drivers.map((driver) => (
-  <tr key={driver.driverId} style={styles.tableRow}>
-
-    <td style={styles.tableCell}>{driver.firstName}</td>
-    <td style={styles.tableCell}>{driver.lastName}</td>
-
-    {/* Status Label */}
-    <td style={styles.tableCell}>
-      <span
-        style={{
-          padding: "4px 8px",
-          borderRadius: "12px",
-          fontSize: "12px",
-          fontWeight: "600",
-          color: "#fff",
-          backgroundColor: driver.active ? "#4caf50" : "#f44336",
-        }}
-      >
-        {driver.active ? "Active" : "Inactive"}
-      </span>
-    </td>
-
-    {/* Toggle Button */}
-    <td style={styles.tableCell}>
-      <button
-        style={{
-          ...styles.generateBtn,
-          background: driver.active ? "#f44336" : "#4caf50",
-        }}
-        onClick={() => toggleDriverActive(driver.driverUnique)}
-      >
-        {driver.active ? "Deactivate" : "Activate"}
-      </button>
-    </td>
-
-  </tr>
-))}
-</tbody>
-          </table>
+              <tbody>
+                {customers.map((c) => (
+                  <tr key={c.customerNumber}>
+                    <td>{c.firstName} {c.lastName}</td>
+                    <td>{c.phoneNumber}</td>
+                    <td>{c.email}</td>
+                    <td>
+                      {c.deliveryAddress
+                        ? `${c.deliveryAddress.buildingName} ${c.deliveryAddress.streetNumber}, ${c.deliveryAddress.city}, ${c.deliveryAddress.state} ${c.deliveryAddress.zipCode}`
+                        : "-"}
+                    </td>
+                    <td>
+                      {c.billingAddress
+                        ? `${c.billingAddress.buildingName} ${c.billingAddress.streetNumber}, ${c.billingAddress.city}, ${c.billingAddress.state} ${c.billingAddress.zipCode}`
+                        : "-"}
+                    </td>
+                    <td>
+                      {c.creditCard
+                        ? `**** **** **** ${c.creditCard.cardNumber}`
+                        : "No Card"}
+                    </td>
+                    <td>
+                      <button
+                        className={`btn btn-sm ${c.approved ? "btn-danger" : "btn-primary"}`}
+                        onClick={() => approveCustomer(c.customerNumber)}
+                      >
+                        {c.approved ? "Revoke" : "Approve"}
+                      </button>
+                    </td>
+                    <td>{c.rewardNumber ? <strong>{c.rewardNumber}</strong> : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-
-      <div style={styles.tableContainer}>
-  <h3 style={styles.tableTitle}>Customers</h3>
-
-  <table style={styles.table}>
-    <thead>
-      <tr>
-        <th style={styles.tableHeader}>Full Name</th>
-        <th style={styles.tableHeader}>Phone</th>
-        <th style={styles.tableHeader}>Email</th>
-        <th style={styles.tableHeader}>Delivery Address</th>
-        <th style={styles.tableHeader}>Billing Address</th>
-        <th style={styles.tableHeader}>Credit Card</th>
-        <th style={styles.tableHeader}>Approve</th>
-        <th style={styles.tableHeader}>Reward Code</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {customers.map((c) => (
-        <tr key={c.customerNumber} style={styles.tableRow}>
-
-          <td style={styles.tableCell}>
-            {c.firstName} {c.lastName}
-          </td>
-
-          <td style={styles.tableCell}>{c.phoneNumber}</td>
-
-          <td style={styles.tableCell}>{c.email}</td>
-
-          {/* Delivery Address */}
-          <td style={styles.tableCell}>
-            {c.deliveryAddress
-              ? `${c.deliveryAddress.buildingName} ${c.deliveryAddress.streetNumber}, ${c.deliveryAddress.city}, ${c.deliveryAddress.state} ${c.deliveryAddress.zipCode}`
-              : "-"}
-          </td>
-
-          {/* Billing Address */}
-          <td style={styles.tableCell}>
-            {c.billingAddress
-              ? `${c.billingAddress.buildingName} ${c.billingAddress.streetNumber}, ${c.billingAddress.city}, ${c.billingAddress.state} ${c.billingAddress.zipCode}`
-              : "-"}
-          </td>
-
-          {/* Credit Card Masked */}
-          <td style={styles.tableCell}>
-            {c.creditCard
-              ? `**** **** **** ${c.creditCard.cardNumber}`
-              : "No Card"}
-          </td>
-
-          {/* Approval Toggle */}
-          <td style={styles.tableCell}>
-            <button
-              style={{
-                padding: "4px 8px",
-                background: c.approved ? "#f44336" : "#4caf50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-              onClick={() => approveCustomer(c.customerNumber)}
-            >
-              {c.approved ? "Revoke" : "Approve"}
-            </button>
-          </td>
-
-          {/* Reward Code */}
-          <td style={styles.tableCell}>
-            {c.rewardNumber ? <strong>{c.rewardNumber}</strong> : "-"}
-          </td>
-
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
-      
-            {/* Add Staff Popup */}
-        {showStaffPopup && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <h3>Add New Staff</h3>
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={newStaff.firstName}
-              onChange={handleStaffChange}
-              style={styles.input}
-            />
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={newStaff.lastName}
-              onChange={handleStaffChange}
-              style={styles.input}
-            />
-            <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={newStaff.email}
+      {/* Add Staff Popup */}
+      {showStaffPopup && (
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
+            <h3 style={{ marginBottom: "16px" }}>Add New Staff</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                value={newStaff.firstName}
                 onChange={handleStaffChange}
-                style={styles.input}
-            />
+                className="input"
+              />
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                value={newStaff.lastName}
+                onChange={handleStaffChange}
+                className="input"
+              />
+              <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={newStaff.email}
+                  onChange={handleStaffChange}
+                  className="input"
+              />
+            </div>
 
-
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button style={styles.generateBtn} onClick={generateStaffCredentials}>
-                Add
-              </button>
-              <button
-                style={styles.closeBtn}
-                onClick={() => setShowStaffPopup(false)}
-              >
-                Cancel
-              </button>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "16px" }}>
+              <button className="btn btn-primary" onClick={generateStaffCredentials}>Add</button>
+              <button className="btn btn-outline" onClick={() => setShowStaffPopup(false)}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-            {/* Staff Added Confirmation Popup */}
+      {/* Staff Added Confirmation Popup */}
       {showStaffConfirm && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
             <h3>✅ Staff Added Successfully</h3>
             <p><strong>Username:</strong> {lastCreatedStaff?.username}</p>
-            <p><em>Password was generated internally and not shown here, and will send to your email.</em></p>
-            <button
-              style={styles.generateBtn}
-              onClick={() => setShowStaffConfirm(false)}
-            >
-              OK
-            </button>
+            <p style={{ fontSize: "13px", color: "var(--muted)" }}>
+              <em>Password was generated internally and not shown here, and will send to your email.</em>
+            </p>
+            <button className="btn btn-primary" onClick={() => setShowStaffConfirm(false)}>OK</button>
           </div>
         </div>
       )}
 
+      {showDeleteStaffPopup && (
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
+            <h3 style={{ marginBottom: "16px" }}>Delete Staff</h3>
 
-{showDeleteStaffPopup && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modal}>
-      <h3>Delete Staff</h3>
+            <select
+              value={selectedStaff}
+              onChange={(e) => setSelectedStaff(e.target.value)}
+              className="input"
+            >
+              <option value="">-- Select Staff --</option>
+              {staff.map((user) => (
+                <option key={user.staffId} value={user.loginCredential.username}>
+                  {user.loginCredential.username}
+                </option>
+              ))}
+            </select>
 
-      <select
-  value={selectedStaff}
-  onChange={(e) => setSelectedStaff(e.target.value)}
-  style={styles.input}
->
-  <option value="">-- Select Staff --</option>
-  {staff.map((user) => (
-    <option key={user.staffId} value={user.loginCredential.username}>
-      {user.loginCredential.username}
-    </option>
-  ))}
-</select>
-
-      <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-        <button style={styles.generateBtn} onClick={handleDeleteStaff}>Yes</button>
-        <button style={styles.closeBtn} onClick={() => setShowDeleteStaffPopup(false)}>No</button>
-      </div>
-    </div>
-  </div>
-)}
-      
-
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "16px" }}>
+              <button className="btn btn-danger" onClick={handleDeleteStaff}>Yes</button>
+              <button className="btn btn-outline" onClick={() => setShowDeleteStaffPopup(false)}>No</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Driver Popup */}
-{showDriverPopup && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modal}>
-      <h3>Add New Driver</h3>
-      <input
-        type="text"
-        name="firstName"
-        placeholder="First Name"
-        value={newDriver.firstName}
-        onChange={handleDriverChange}
-        style={styles.input}
-      />
-      <input
-        type="text"
-        name="lastName"
-        placeholder="Last Name"
-        value={newDriver.lastName}
-        onChange={handleDriverChange}
-        style={styles.input}
-      />
-      <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-        <button style={styles.generateBtn} onClick={generateDriverData}>
-          Add
-        </button>
-        <button
-          style={styles.closeBtn}
-          onClick={() => setShowDriverPopup(false)}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-   {/* ✅ Change Password Popup */}
-{showChangePassword && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modal}>
-      <h3>Change Password</h3>
-      {passwordSuccess ? (
-        <>
-          <p style={{ color: "green" }}>✅ Password successfully changed!</p>
-          <button
-            style={styles.generateBtn}
-            onClick={() => setShowChangePassword(false)}
-          >
-            Close
-          </button>
-        </>
-      ) : (
-        <form style={{ display: "flex", flexDirection: "column" }} onSubmit={handlePasswordSubmit}>
-          <input
-            type="password"
-            placeholder="Current Password"
-            value={passwordForm.currentPassword}
-            onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-            style={styles.input}
-          />
-          {passwordErrors.currentPassword && <p style={{ color: "red" }}>{passwordErrors.currentPassword}</p>}
-          
-          <input
-            type="password"
-            placeholder="New Password"
-            value={passwordForm.newPassword}
-            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-            style={styles.input}
-          />
-          {passwordErrors.newPassword && <p style={{ color: "red" }}>{passwordErrors.newPassword}</p>}
-          
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={passwordForm.confirmPassword}
-            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-            style={styles.input}
-          />
-          {passwordErrors.confirmPassword && <p style={{ color: "red" }}>{passwordErrors.confirmPassword}</p>}
-          
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            <button type="submit" style={styles.generateBtn}>Update 🔒</button>
-            <button type="button" style={styles.closeBtn} onClick={() => setShowChangePassword(false)}>Cancel</button>
+      {showDriverPopup && (
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
+            <h3 style={{ marginBottom: "16px" }}>Add New Driver</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name"
+                value={newDriver.firstName}
+                onChange={handleDriverChange}
+                className="input"
+              />
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name"
+                value={newDriver.lastName}
+                onChange={handleDriverChange}
+                className="input"
+              />
+            </div>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "16px" }}>
+              <button className="btn btn-primary" onClick={generateDriverData}>Add</button>
+              <button className="btn btn-outline" onClick={() => setShowDriverPopup(false)}>Cancel</button>
+            </div>
           </div>
-        </form>
+        </div>
       )}
-    </div>
-  </div>
-)}
 
+      {/* ✅ Change Password Popup */}
+      {showChangePassword && (
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
+            <h3 style={{ marginBottom: "16px" }}>Change Password</h3>
+            {passwordSuccess ? (
+              <>
+                <p className="field-success">✅ Password successfully changed!</p>
+                <button className="btn btn-primary" onClick={() => setShowChangePassword(false)}>Close</button>
+              </>
+            ) : (
+              <form style={{ display: "flex", flexDirection: "column", gap: "10px" }} onSubmit={handlePasswordSubmit}>
+                <input
+                  type="password"
+                  placeholder="Current Password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  className="input"
+                />
+                {passwordErrors.currentPassword && <p className="field-error">{passwordErrors.currentPassword}</p>}
 
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  className="input"
+                />
+                {passwordErrors.newPassword && <p className="field-error">{passwordErrors.newPassword}</p>}
 
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  className="input"
+                />
+                {passwordErrors.confirmPassword && <p className="field-error">{passwordErrors.confirmPassword}</p>}
 
-
-
-
-
+                <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "6px" }}>
+                  <button type="submit" className="btn btn-primary">Update 🔒</button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowChangePassword(false)}>Cancel</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Delete Client Popup */}
       {showDeleteClientPopup && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
-            <h3>Delete Client</h3>
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
+            <h3 style={{ marginBottom: "16px" }}>Delete Client</h3>
             <select
               value={selectedClient}
               onChange={(e) => setSelectedClient(e.target.value)}
-              style={styles.input}
+              className="input"
             >
               <option value="">-- Select Client --</option>
-             
             </select>
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-              <button style={styles.generateBtn} onClick={handleDeleteClient}>Yes</button>
-              <button style={styles.closeBtn} onClick={() => setShowDeleteClientPopup(false)}>No</button>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "16px" }}>
+              <button className="btn btn-danger" onClick={handleDeleteClient}>Yes</button>
+              <button className="btn btn-outline" onClick={() => setShowDeleteClientPopup(false)}>No</button>
             </div>
           </div>
         </div>
@@ -874,146 +753,33 @@ const handleDriverChange = (e) => {
 
       {/* Delete Driver Popup */}
       {showDeleteDriverPopup && (
-  <div style={styles.modalOverlay}>
-    <div style={styles.modal}>
-      <h3>Remove Driver</h3>
+        <div className="modal-overlay">
+          <div className="modal-sheet" style={{ width: "400px", padding: "26px", textAlign: "center" }}>
+            <h3 style={{ marginBottom: "16px" }}>Remove Driver</h3>
 
-      <select
-        value={selectedDriver}
-        onChange={(e) => setSelectedDriver(e.target.value)}
-        style={styles.input}
-      >
-        <option value="">-- Select Driver --</option>
+            <select
+              value={selectedDriver}
+              onChange={(e) => setSelectedDriver(e.target.value)}
+              className="input"
+            >
+              <option value="">-- Select Driver --</option>
+              {drivers.map((d) => (
+                <option key={d.driverId} value={d.driverUnique}>
+                  {d.driverUnique.trim()}
+                </option>
+              ))}
+            </select>
 
-        {drivers.map((d) => (
-          <option key={d.driverId} value={d.driverUnique}>
-            {d.driverUnique.trim()}
-          </option>
-        ))}
-
-      </select>
-
-      <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-        <button style={styles.generateBtn} onClick={handleDeleteDriver}>Yes</button>
-        <button style={styles.closeBtn} onClick={() => setShowDeleteDriverPopup(false)}>No</button>
-      </div>
-    </div>
-  </div>
-)}
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "16px" }}>
+              <button className="btn btn-danger" onClick={handleDeleteDriver}>Yes</button>
+              <button className="btn btn-outline" onClick={() => setShowDeleteDriverPopup(false)}>No</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
 }
-
-const styles = {
-  container: { minHeight: "100vh", background: "#f9f9f9" },
-  header: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    alignItems: "center",
-    background: "#ff5722",
-    color: "white",
-    padding: "10px 20px",
-  },
-  left: { justifySelf: "start" },
-  center: { justifySelf: "center" },
-
-  right: { justifySelf: "end",  display: "flex",  gap: "10px" },
-
-  logo: { width: "50px", height: "50px" },
-  title: { margin: 0, fontSize: "22px", fontWeight: "bold" },
-  logout: {
-    background: "white",
-    color: "#ff5722",
-    border: "none",
-    borderRadius: "6px",
-    padding: "6px 12px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  toolbar: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "20px",
-    padding: "20px",
-    background: "#fff",
-  },
-  actionBtn: {
-    padding: "10px 15px",
-    border: "1px solid #ff5722",
-    background: "white",
-    color: "#ff5722",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  tablesContainer: {
-    display: "flex",
-    justifyContent: "space-around",
-    gap: "20px",
-    padding: "20px",
-    flexWrap: "wrap",
-  },
-  tableContainer: {
-    flex: 1,
-    background: "#fff",
-    borderRadius: "8px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-    overflowX: "auto",
-    padding: "15px",
-    minWidth: "250px",
-  },
-  tableTitle: { marginBottom: "10px", textAlign: "center", color: "#ff5722" },
-  table: { width: "100%", borderCollapse: "collapse" },
-  tableRow: { borderBottom: "1px solid black" },
-  tableCell: { padding: "8px 12px" },
-  tableHeader: {
-    borderBottom: "2px solid black",
-    textAlign: "left",
-    padding: "8px 12px",
-    background: "#f2f2f2",
-  },
-  modalOverlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modal: {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "8px",
-    width: "400px",
-    textAlign: "center",
-  },
-  input: {
-    width: "90%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "6px",
-    border: "1px solid #ccc",
-  },
-  generateBtn: {
-    background: "#ff5722",
-    color: "#fff",
-    border: "none",
-    padding: "10px 15px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  closeBtn: {
-    background: "#ccc",
-    border: "none",
-    padding: "8px 12px",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-};
 
 export default Dashboard;
