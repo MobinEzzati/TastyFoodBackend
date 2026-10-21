@@ -1,4 +1,3 @@
-# TastyFoodBackend
 
 # Tasty Food — Full-Stack Restaurant Ordering App
 
